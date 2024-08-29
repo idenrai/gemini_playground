@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
@@ -37,20 +38,26 @@ def setup_logger():
     return _logger
 
 
-def execute():
+def save_uploaded_file(uploaded_file):
     """
-    Execute
-    :return:
+    Save the uploaded file to the specified directory and return the file path.
     """
-    # API 키 설정
-    genai.configure(api_key=get_env("GOOGLE_API_KEY"))
+    if not os.path.exists(conf["upload_path"]):
+        os.makedirs(conf["upload_path"])
 
-    st.set_page_config(page_title="Gemini Playground", page_icon=None)
-    st.title("Gemini Playground")
+    file_path = os.path.join(conf["upload_path"], uploaded_file.name)
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    return file_path
 
+
+def chat_view():
+    """
+    View for Gemini Chat.
+    """
+    st.title(conf["page_chat"])
     if "chat" not in st.session_state:
-        # model = genai.GenerativeModel(conf["model_flash"])
-        model = genai.GenerativeModel(conf["model_pro"])
+        model = genai.GenerativeModel(conf["model_flash"])
         st.session_state["chat"] = model.start_chat(
             history=[
                 glm.Content(
@@ -90,11 +97,47 @@ def execute():
         with st.chat_message("ai"):
             st.markdown(response.text)
 
-        # Geminid의 Response를 Chat 이력에 추가
+        # Gemini의 Response를 Chat 이력에 추가
         st.session_state["chat_history"].append(
             {"role": "assistant", "content": response.text}
         )
-        logger.info(f"History: {st.session_state["chat_history"]}")
+        logger.info(f"History: {st.session_state['chat_history']}")
+
+
+def document_chat_view():
+    """
+    View for uploading files.
+    """
+    st.title(conf["page_document_chat"])
+    uploaded_file = st.file_uploader(
+        "파일을 업로드하세요", type=["txt", "pdf", "png", "jpg"]
+    )
+    if uploaded_file:
+        file_path = save_uploaded_file(uploaded_file)
+        st.session_state["uploaded_file_path"] = file_path
+        st.success(f"파일이 성공적으로 업로드 되었습니다: {file_path}")
+
+
+def execute():
+    """
+    Execute
+    :return:
+    """
+    # API 키 설정
+    genai.configure(api_key=get_env("GOOGLE_API_KEY"))
+
+    st.set_page_config(page_title="Gemini Playground", page_icon=None)
+
+    option = st.sidebar.selectbox(
+        "Navigation",
+        (conf["page_chat"], conf["page_document_chat"]),
+    )
+
+    # 선택된 옵션에 따라 메인 화면 변경
+    if option == conf["page_chat"]:
+        chat_view()
+    elif option == conf["page_document_chat"]:
+        document_chat_view()
 
 
 if __name__ == "__main__":

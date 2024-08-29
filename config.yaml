@@ -1,2 +1,8 @@
 model_pro: gemini-pro
 model_flash: gemini-1.5-flash
+
+upload_path: upload_files
+
+# pages
+page_chat: Gemini Chat
+page_document_chat: Gemini Chat with Document
