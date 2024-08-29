@@ -46,10 +46,17 @@ def execute():
     model = genai.GenerativeModel(conf["model_flash"])
     # model = genai.GenerativeModel(conf["model_pro"])
 
+    # PDF만 가능
+    # https://ai.google.dev/gemini-api/docs/document-processing?lang=python
+    # https://github.com/google-gemini/cookbook/blob/main/quickstarts/PDF_Files.ipynb
     file_path = "./upload_files/samplepptx.pdf"
-    # file_path = "./upload_files/samplepptx.pptx"
+
+    # 혹시나 해서 테스트해보니 이하의 에러가 나옴
+    # google.api_core.exceptions.InvalidArgument: 400 Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation
     # file_path = "./upload_files/samplepptx.pptm"
-    sample_file = genai.upload_file(path=file_path, display_name="My File PDF")
+    # google.api_core.exceptions.InvalidArgument: 400 Unsupported MIME type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+    # file_path = "./upload_files/samplepptx.pptx"
+    sample_file = genai.upload_file(path=file_path, display_name="Uploaded file")
     logger.info(f"Uploaded file '{sample_file.display_name}' as: {sample_file.uri}")
 
     while True:
