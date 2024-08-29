@@ -43,6 +43,14 @@ streamlit run main.py
 
 ### Run
 
+Chat Test Script
+
 ```shell
 python chat_sample.py --env=dev
+```
+
+Document Processing Test Script
+
+```shell
+python document_chat_sample.py --env=dev
 ```
