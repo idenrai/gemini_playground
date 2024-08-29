@@ -64,7 +64,7 @@ def chat_view():
                     role="user",
                     parts=[
                         glm.Part(
-                            text="You are an excellent AI assistant. Please answer the given question as politely as possible. Please answer in a markdown format. Please answer in Korean."
+                            text="You are an excellent AI assistant. Please answer the given question as politely as possible. Please answer in a markdown format. Please answer in the same language as the question."
                         )
                     ],
                 ),
@@ -109,13 +109,66 @@ def document_chat_view():
     View for uploading files.
     """
     st.title(conf["page_document_chat"])
-    uploaded_file = st.file_uploader(
-        "파일을 업로드하세요", type=["txt", "pdf", "png", "jpg"]
-    )
-    if uploaded_file:
-        file_path = save_uploaded_file(uploaded_file)
-        st.session_state["uploaded_file_path"] = file_path
-        st.success(f"파일이 성공적으로 업로드 되었습니다: {file_path}")
+
+    if "document_model" not in st.session_state:
+        st.session_state["document_model"] = genai.GenerativeModel(conf["model_flash"])
+        st.session_state["chat_history"] = []
+        st.session_state["target_files"] = []
+        st.session_state["target_file_names"] = []
+
+    # PDF 파일 업로드
+    if uploaded_file := st.sidebar.file_uploader("File Upload", type=["pdf"]):
+        if uploaded_file.name not in st.session_state["target_file_names"]:
+            file_path = save_uploaded_file(uploaded_file)
+            target_file = genai.upload_file(
+                path=file_path, display_name=uploaded_file.name
+            )
+            st.session_state["target_files"].append(target_file)
+            st.session_state["target_file_names"].append(uploaded_file.name)
+            st.sidebar.success("Upload completed")
+
+    # Chat History
+    for message in st.session_state["chat_history"]:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # 업로드한 파일이 존재할 경우
+    if len(st.session_state["target_files"]) > 0:
+        st.sidebar.subheader("Uploaded files")
+
+        # 파일명 표시
+        for target_file_name in st.session_state["target_file_names"]:
+            st.sidebar.markdown(f"- {target_file_name}")
+
+        # 유저 입력 후
+        if prompt := st.chat_input("Message Gemini"):
+            logger.info(f"User prompt: {prompt}")
+
+            # 유저 입력 표시
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            # history 에 유저 입력 추가
+            st.session_state["chat_history"].append({"role": "user", "content": prompt})
+
+            # 메시지 송신
+            files_and_message = st.session_state["target_files"] + [prompt]
+            logger.info(f"files_and_message: {files_and_message}")
+
+            response = st.session_state["document_model"].generate_content(
+                files_and_message
+            )
+            logger.info(f"Response: {response}")
+
+            # Response
+            with st.chat_message("ai"):
+                st.markdown(response.text)
+
+            # Gemini의 Response를 Chat 이력에 추가
+            st.session_state["chat_history"].append(
+                {"role": "assistant", "content": response.text}
+            )
+            logger.info(f"History: {st.session_state['chat_history']}")
 
 
 def execute():
