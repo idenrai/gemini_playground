@@ -1,7 +1,6 @@
 import os
 import streamlit as st
 import google.generativeai as genai
-import google.ai.generativelanguage as glm
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -22,8 +21,11 @@ def setup_logger():
     # Create formatter
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
+    # Get current date in yyyymmdd format
+    current_date = datetime.now().strftime("%Y%m%d")
+
     # Create file handler
-    log_file = "./logs/chat_sample_{}.log".format(timestamp)
+    log_file = "./logs/chat_sample_{}.log".format(current_date)
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
@@ -56,21 +58,13 @@ def chat_view():
     View for Gemini Chat.
     """
     st.title(conf["page_chat"])
-    if "chat" not in st.session_state:
-        model = genai.GenerativeModel(conf["model_flash"])
-        st.session_state["chat"] = model.start_chat(
-            history=[
-                glm.Content(
-                    role="user",
-                    parts=[
-                        glm.Part(
-                            text="You are an excellent AI assistant. Please answer the given question as politely as possible. Please answer in a markdown format. Please answer in the same language as the question."
-                        )
-                    ],
-                ),
-                glm.Content(role="model", parts=[glm.Part(text="Okay.")]),
-            ]
+    if "chat_model" not in st.session_state:
+        st.session_state["chat_model"] = genai.GenerativeModel(
+            model_name=st.session_state["gemini_model"],
+            system_instruction="You are an excellent AI assistant. Please answer the given question as politely as possible. Please answer in a markdown format. Please answer in the same language as the question."
         )
+        logger.info(f"Gemini Model: {st.session_state["gemini_model"]}")
+
         st.session_state["chat_history"] = []
 
     # Chat History
@@ -90,7 +84,7 @@ def chat_view():
         st.session_state["chat_history"].append({"role": "user", "content": prompt})
 
         # 메시지 송신
-        response = st.session_state["chat"].send_message(prompt)
+        response = st.session_state["chat_model"].generate_content(prompt)
         logger.info(f"Response: {response}")
 
         # Response
@@ -111,7 +105,10 @@ def document_chat_view():
     st.title(conf["page_document_chat"])
 
     if "document_model" not in st.session_state:
-        st.session_state["document_model"] = genai.GenerativeModel(conf["model_flash"])
+        st.session_state["document_model"] = genai.GenerativeModel(
+            model_name=st.session_state["gemini_model"],
+            system_instruction="You are an excellent AI assistant. Please answer the given question as politely as possible. Please answer in a markdown format. Please answer in the same language as the question."
+        )
         st.session_state["chat_history"] = []
         st.session_state["target_files"] = []
         st.session_state["target_file_names"] = []
@@ -142,7 +139,6 @@ def document_chat_view():
 
         # 유저 입력 후
         if prompt := st.chat_input("Message Gemini"):
-            logger.info(f"User prompt: {prompt}")
 
             # 유저 입력 표시
             with st.chat_message("user"):
@@ -154,6 +150,8 @@ def document_chat_view():
             # 메시지 송신
             files_and_message = st.session_state["target_files"] + [prompt]
             logger.info(f"files_and_message: {files_and_message}")
+
+            logger.info(f"Gemini Model: {st.session_state["gemini_model"]}")
 
             response = st.session_state["document_model"].generate_content(
                 files_and_message
@@ -188,8 +186,16 @@ def execute():
 
     # 선택된 옵션에 따라 메인 화면 변경
     if option == conf["page_chat"]:
+        st.session_state["gemini_model"] = st.sidebar.selectbox(
+            "Gemini Model",
+            (conf["model_flash"], conf["model_pro"]),
+        )
         chat_view()
     elif option == conf["page_document_chat"]:
+        st.session_state["gemini_model"] = st.sidebar.selectbox(
+            "Gemini Model",
+            (conf["model_flash"], conf["model_pro_vision"]),
+        )
         document_chat_view()
 
 
