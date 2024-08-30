@@ -61,7 +61,14 @@ def chat_view():
     if "chat_model" not in st.session_state:
         st.session_state["chat_model"] = genai.GenerativeModel(
             model_name=st.session_state["gemini_model"],
-            system_instruction="You are an excellent AI assistant. Please answer the given question as politely as possible. Please answer in a markdown format. Please answer in the same language as the question."
+            system_instruction="""
+            ### instructions and conditions ###
+            1. You are a competent AI assistant and consultant. Please answer my questions with the utmost sincerity, providing detailed explanations and ensuring factual accuracy.
+            2. Questions will usually be asked in Korean. If a question or instruction is given in another language (e.g., English), respond in that language.
+            3. The result should be presented in Markdown format. Use appropriate headers, bullet points, and other Markdown elements to enhance readability.
+            4. If the question is ambiguous or lacks context, you may ask the user clear and concise clarifying questions.
+            5. Consistently follow all the instructions above when producing the deliverables.
+            """
         )
         logger.info(f"Gemini Model: {st.session_state["gemini_model"]}")
 
@@ -107,7 +114,15 @@ def document_chat_view():
     if "document_model" not in st.session_state:
         st.session_state["document_model"] = genai.GenerativeModel(
             model_name=st.session_state["gemini_model"],
-            system_instruction="You are an excellent AI assistant. Please answer the given question as politely as possible. Please answer in a markdown format. Please answer in the same language as the question."
+            system_instruction="""
+            ### instructions and conditions ###
+            1. Questions will primarily be asked in Korean. If a question or instruction is given in another language (e.g., English), respond in that language.
+            2. Results should be based solely on the provided documents and should not use external information.
+            3. Organize the content of the document based on the questions.
+            4. The result must include the name and page number of the document where the content was referenced.
+            5. If necessary, you may ask the user clarifying questions.
+            6. Follow all of the above instructions when producing the deliverables.
+            """
         )
         st.session_state["chat_history"] = []
         st.session_state["target_files"] = []
