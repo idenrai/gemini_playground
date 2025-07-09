@@ -22,11 +22,11 @@ Poetry를 이용하여 개발 환경 구축
 Poetry의 설치에 관해서는 [poetry 사용법 메모](https://idenrai.tistory.com/289) 참조
 
 ```shell
-poetry install
+make install
 ```
 
 ```shell
-poetry shell
+make shell
 ```
 
 ## Chatbot
@@ -34,7 +34,7 @@ poetry shell
 Streamlit을 이용하여 간단한 Chatbot을 구현
 
 ```shell
-streamlit run main.py
+make serve
 ```
 
 ## Sample Scripts
