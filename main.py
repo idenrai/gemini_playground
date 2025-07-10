@@ -68,7 +68,7 @@ def chat_view():
             3. The result should be presented in Markdown format. Use appropriate headers, bullet points, and other Markdown elements to enhance readability.
             4. If the question is ambiguous or lacks context, you may ask the user clear and concise clarifying questions.
             5. Consistently follow all the instructions above when producing the deliverables.
-            """
+            """,
         )
         logger.info(f"Gemini Model: {st.session_state["gemini_model"]}")
 
@@ -122,7 +122,7 @@ def document_chat_view():
             4. The result must include the name and page number of the document where the content was referenced.
             5. If necessary, you may ask the user clarifying questions.
             6. Follow all of the above instructions when producing the deliverables.
-            """
+            """,
         )
         st.session_state["chat_history"] = []
         st.session_state["target_files"] = []
@@ -209,7 +209,7 @@ def execute():
     elif option == conf["page_document_chat"]:
         st.session_state["gemini_model"] = st.sidebar.selectbox(
             "Gemini Model",
-            (conf["model_flash"], conf["model_pro_vision"]),
+            (conf["model_flash"], conf["model_pro"]),
         )
         document_chat_view()
 

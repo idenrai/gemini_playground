@@ -43,7 +43,6 @@ def execute():
     :return:
     """
     genai.configure(api_key=get_env("GOOGLE_API_KEY"))
-    # model = genai.GenerativeModel(conf["model_flash"])
     model = genai.GenerativeModel(conf["model_pro"])
     chat = model.start_chat(history=[])
 
